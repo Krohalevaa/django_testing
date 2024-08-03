@@ -24,10 +24,7 @@ def test_user_can_create_comment(auth_client, comment_data, detail_url):
 
 
 def test_user_cant_use_bad_words(auth_client, news, detail_url):
-
-    """Если комментарий содержит запрещённые слова, он не будет
-    опубликован, а форма вернёт ошибку"""
-
+    """Проверка комментария"""
     start_comment_count = Comment.objects.count()
     random_word = random.choice(BAD_WORDS)
     bad_words_data = {'text': f'Какой-то текст, {random_word}, еще текст'}
