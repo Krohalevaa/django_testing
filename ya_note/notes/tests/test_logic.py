@@ -37,13 +37,10 @@ class TestNoteCreation(TestCase):
     def test_can_create_note(self):
         """Авторизованный пользователь может создать заметку."""
         notes_count_before = Note.objects.count()
-
         response = self.author_client.post(self.url, data=self.form_data)
         self.assertRedirects(response, self.done_url)
-
         notes_count = Note.objects.count()
         self.assertGreater(notes_count, notes_count_before)
-
         new_note = (Note.objects.all()
                     .values('title', 'text', 'slug', 'author',).last())
         expected_note = {**self.form_data, 'author': self.author.id}

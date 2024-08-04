@@ -19,11 +19,9 @@ def test_news_count(client):
         for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     ]
     News.objects.bulk_create(all_news)
-
     response = client.get(reverse('news:home'))
     object_list = response.context['object_list']
     news_count = len(object_list)
-
     assert news_count == settings.NEWS_COUNT_ON_HOME_PAGE
 
 
@@ -40,12 +38,10 @@ def test_news_order(client):
         for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     ]
     News.objects.bulk_create(all_news)
-
     response = client.get(reverse('news:home'))
     object_list = response.context['object_list']
     all_dates = [news.date for news in object_list]
     sorted_dates = sorted(all_dates, reverse=True)
-
     assert all_dates == sorted_dates
 
 
@@ -63,10 +59,8 @@ def test_comments_order(author, author_client, news):
 
     response = author_client.get(reverse('news:detail', args=(news.id,)))
     assert 'news' in response.context
-
     comment_list = response.context['news']
     comments_dates = [comm.created for comm in comment_list.comment_set.all()]
-
     assert comments_dates == sorted(comments_dates)
 
 
