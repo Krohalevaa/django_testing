@@ -17,7 +17,7 @@ def test_user_can_comment(author_client, author, news):
     url = reverse('news:detail', args=(news.id,))
     response = author_client.post(url, data=FORM_DATA)
     assertRedirects(response, f'{url}#comments')
-    assert Comment.objects.count() > comments_count_before
+    assert Comment.objects.count() == comments_count_before + 1
     comment = Comment.objects.get()
     assert comment.text == FORM_DATA['text']
     assert comment.author == author
@@ -68,7 +68,7 @@ def test_delete_comment(author_client, news, comment):
     url_to_comments = news_url + '#comments'
     response = author_client.delete(delete_url)
     assertRedirects(response, url_to_comments)
-    assert Comment.objects.count() < comments_count_before
+    assert Comment.objects.count() == comments_count_before - 1
 
 
 def test_user_cant_edit_other_comment(

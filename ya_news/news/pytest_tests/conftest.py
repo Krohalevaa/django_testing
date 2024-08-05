@@ -104,8 +104,3 @@ def delete_comment_url(comment):
 @pytest.fixture
 def edit_comment_url(comment):
     return reverse('news:edit', args=(comment.pk,))
-
-
-# @pytest.fixture
-# def form_data():
-#     return {'text': 'Новый текст'}
