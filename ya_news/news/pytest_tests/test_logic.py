@@ -7,6 +7,7 @@ from django.urls import reverse
 from news.models import Comment
 from news.forms import BAD_WORDS, WARNING
 
+FORM_DATA = {'text': 'Новый текст'}
 
 @pytest.mark.django_db
 def test_user_can_comment(author_client, author, news, form_data):
