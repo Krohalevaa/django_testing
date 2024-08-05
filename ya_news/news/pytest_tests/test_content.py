@@ -28,9 +28,9 @@ def test_news_order(client):
     assert all_dates == sorted_dates
 
 
-def test_comments_order(author, author_client, news):
+def test_comments_order(client, author_client, news, detail_url):
     """Сортировка комментариев"""
-    response = author_client.get(reverse('news:detail', args=(news.id,)))
+    response = client.get(detail_url)
     assert 'news' in response.context
     comment_set = response.context['news']
     comments_dates = [comm.created for comm in comment_set.comment_set.all()]
