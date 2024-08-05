@@ -1,68 +1,43 @@
 from http import HTTPStatus
 
-from django.contrib.auth import get_user_model
-from django.test import TestCase
-from django.urls import reverse
-
-from notes.models import Note
+from notes.tests.common import URL, BaseTestCase, AUTHOR, JUST_USER, ANON
 
 
-User = get_user_model()
-
-
-class TestRoutes(TestCase):
-
-    @classmethod
-    def setUpTestData(cls):
-        cls.author = User.objects.create(username='Я')
-        cls.reader = User.objects.create(username='Читатель')
-        cls.note = Note.objects.create(
-            title='Заголовок',
-            text='Текст',
-            slug='i_5',
-            author=cls.author
-        )
-        cls.urls_with_args = (
-            ('notes:detail', (cls.note.slug,)),
-            ('notes:edit', (cls.note.slug,)),
-            ('notes:delete', (cls.note.slug,))
-        )
-        cls.urls = (
-            ('notes:list', None),
-            ('notes:add', None),
-            ('notes:success', None),
-            *cls.urls_with_args
-        )
-
+class TestRoutes(BaseTestCase):
     def test_pages_availability(self):
-        """Доступность страниц анониму, автору, читателю"""
+        """Доступность страниц"""
         urls = (
-            'notes:home',
-            'users:login',
-            'users:logout',
-            'users:signup',
+            (URL.home, self.client, HTTPStatus.OK, ANON),
+            (URL.login, self.client, HTTPStatus.OK, ANON),
+            (URL.logout, self.client, HTTPStatus.OK, ANON),
+            (URL.signup, self.client, HTTPStatus.OK, ANON),
+            (URL.detail, self.author_client, HTTPStatus.OK, AUTHOR),
+            (URL.edit, self.author_client, HTTPStatus.OK, AUTHOR),
+            (URL.delete, self.author_client, HTTPStatus.OK, AUTHOR),
+            (URL.add, self.user_client, HTTPStatus.OK, JUST_USER),
+            (URL.list, self.user_client, HTTPStatus.OK, JUST_USER),
+            (URL.success, self.user_client, HTTPStatus.OK, JUST_USER),
+            (URL.detail, self.user_client, HTTPStatus.NOT_FOUND, JUST_USER),
+            (URL.edit, self.user_client, HTTPStatus.NOT_FOUND, JUST_USER),
+            (URL.delete, self.user_client, HTTPStatus.NOT_FOUND, JUST_USER),
         )
-        for url in urls:
+        for url, client, expected_status, user in urls:
             with self.subTest("Страница не доступна", url=url):
-                response = self.client.get(reverse(url))
-                self.assertEqual(response.status_code, HTTPStatus.OK)
-        for name, args in self.urls:
-            with self.subTest("Страница не доступна", name=name):
-                self.client.force_login(self.author)
-                response = self.client.get(reverse(name, args=args))
-                self.assertEqual(response.status_code, HTTPStatus.OK)
-        for name, args in self.urls_with_args:
-            with self.subTest("Страница не доступна", name=name):
-                self.client.force_login(self.reader)
-                response = self.client.get(reverse(name, args=args))
-                self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+                self.assertEqual(client.get(url).status_code, expected_status)
 
     def test_redirect_for_anonymous_client(self):
         """Редирект со страниц если пользователь анонимный."""
-        login_url = reverse('users:login')
-        for name, args in self.urls:
-            with self.subTest("Страница не доступна", name=name):
-                url = reverse(name, args=args)
-                redirect_url = f'{login_url}?next={url}'
-                response = self.client.get(url)
-                self.assertRedirects(response, redirect_url)
+        urls = (
+            URL.list,
+            URL.add,
+            URL.success,
+            URL.detail,
+            URL.edit,
+            URL.delete,
+        )
+        for url in urls:
+            with self.subTest(url=url):
+                redirect_url = f'{URL.login}?next={url}'
+                self.assertRedirects(
+                    self.client.get(url),
+                    redirect_url)
