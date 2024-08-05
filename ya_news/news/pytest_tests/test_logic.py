@@ -46,7 +46,6 @@ def test_cant_use_bad_words(author_client, news, detail_url):
 
 def test_edit_comment(
         author_client, news, comment, edit_comment_url, detail_url):
-
     """Пользователь может редактировать свой комментарий"""
     url_to_comments = detail_url + '#comments'
     response = author_client.post(edit_comment_url, data=FORM_DATA)
@@ -58,7 +57,6 @@ def test_edit_comment(
 @pytest.mark.django_db
 def test_delete_comment(author_client,
                         news, comment, detail_url, delete_comment_url):
-
     """Пользователь может удалять свой комментарий"""
     comments_count_before = Comment.objects.count()
     url_to_comments = detail_url + '#comments'
