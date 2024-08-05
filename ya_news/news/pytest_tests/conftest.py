@@ -7,10 +7,41 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 from django.test import Client
+from pytest_lazyfixture import lazy_fixture
 
 from news.models import Comment, News
 
+from collections import namedtuple
+
 COMMENTS_COUNT = 3
+ADMIN = lazy_fixture('admin_client')
+AUTHOR = lazy_fixture('author_client')
+CLIENT = lazy_fixture('client')
+
+PK = 1
+
+URL_NAME = namedtuple(
+    'URL_NAME',
+    [
+        'home',
+        'detail',
+        'edit',
+        'delete',
+        'login',
+        'logout',
+        'signup',
+    ],
+)
+
+URL = URL_NAME(
+    reverse('news:home'),
+    reverse('news:detail', args=(PK,)),
+    reverse('news:edit', args=(PK,)),
+    reverse('news:delete', args=(PK,)),
+    reverse('users:login'),
+    reverse('users:logout'),
+    reverse('users:signup'),
+)
 
 
 # Пользователи
