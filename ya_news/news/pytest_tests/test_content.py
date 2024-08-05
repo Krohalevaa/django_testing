@@ -1,28 +1,20 @@
-# from datetime import timedelta
 import pytest
 from news.forms import CommentForm
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.urls import reverse
-# from django.utils import timezone
 
-from news.models import News, Comment
 
 User = get_user_model()
 URL_HOME = reverse('news:home')
 
 
 @pytest.mark.django_db
-def test_news_count(client):
+def test_news_count(client, all_news, news):
     """Количество новостей на странице"""
-    all_news = [
-        News(title=f'Новость {index}', text='Текст.')
-        for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
-    ]
-    News.objects.bulk_create(all_news)
     response = client.get(URL_HOME)
     object_list = response.context['object_list']
-    news_count = len(object_list)
+    news_count = object_list.count()
     assert news_count == settings.NEWS_COUNT_ON_HOME_PAGE
 
 
@@ -40,8 +32,8 @@ def test_comments_order(author, author_client, news):
     """Сортировка комментариев"""
     response = author_client.get(reverse('news:detail', args=(news.id,)))
     assert 'news' in response.context
-    comment_list = response.context['news']
-    comments_dates = [comm.created for comm in comment_list.comment_set.all()]
+    comment_set = response.context['news']
+    comments_dates = [comm.created for comm in comment_set.comment_set.all()]
     assert comments_dates == sorted(comments_dates)
 
 
@@ -52,3 +44,12 @@ def test_anonymous_client_has_no_form(client, detail_url):
     """
     response = client.get(detail_url)
     assert 'form' not in response.context
+
+
+def test_authorized_client_has_form(admin_client, news, detail_url):
+    """Авторизованному пользователю доступна форма для отправки
+    комментария на странице отдельной новости
+    """
+    response = admin_client.get(detail_url)
+    assert 'form' in response.context
+    assert isinstance(response.context['form'], CommentForm)

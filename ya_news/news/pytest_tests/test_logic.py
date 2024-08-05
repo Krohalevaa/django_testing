@@ -9,25 +9,26 @@ from news.forms import BAD_WORDS, WARNING
 
 FORM_DATA = {'text': 'Новый текст'}
 
+
 @pytest.mark.django_db
-def test_user_can_comment(author_client, author, news, form_data):
+def test_user_can_comment(author_client, author, news):
     """Авторизованный пользователь может комментировать"""
     comments_count_before = Comment.objects.count()
     url = reverse('news:detail', args=(news.id,))
-    response = author_client.post(url, data=form_data)
+    response = author_client.post(url, data=FORM_DATA)
     assertRedirects(response, f'{url}#comments')
     assert Comment.objects.count() > comments_count_before
     comment = Comment.objects.get()
-    assert comment.text == form_data['text']
+    assert comment.text == FORM_DATA['text']
     assert comment.author == author
 
 
 @pytest.mark.django_db
-def test_anonymous_user_cant_comment(client, news, form_data):
+def test_anonymous_user_cant_comment(client, news):
     """Анонимный пользователь не может комментировать"""
     comments_count_before = Comment.objects.count()
     url = reverse('news:detail', args=(news.id,))
-    client.post(url, data=form_data)
+    client.post(url, data=FORM_DATA)
     assert Comment.objects.count() == comments_count_before
 
 
@@ -47,15 +48,15 @@ def test_cant_use_bad_words(author_client, news,):
     assert Comment.objects.count() == comments_count_before
 
 
-def test_edit_comment(author_client, form_data, news, comment):
+def test_edit_comment(author_client, news, comment):
     """Пользователь может редактировать свой комментарий"""
     edit_url = reverse('news:edit', args=(comment.id,))
     news_url = reverse('news:detail', args=(news.id,))
     url_to_comments = news_url + '#comments'
-    response = author_client.post(edit_url, data=form_data)
+    response = author_client.post(edit_url, data=FORM_DATA)
     assertRedirects(response, url_to_comments)
     comment.refresh_from_db()
-    assert comment.text == form_data['text']
+    assert comment.text == FORM_DATA['text']
 
 
 @pytest.mark.django_db
@@ -71,11 +72,11 @@ def test_delete_comment(author_client, news, comment):
 
 
 def test_user_cant_edit_other_comment(
-        not_author_client, form_data, comment
+        not_author_client, comment
 ):
     """Пользователь не может редактировать чужой комментарий"""
     edit_url = reverse('news:edit', args=(comment.id,))
-    response = not_author_client.post(edit_url, data=form_data)
+    response = not_author_client.post(edit_url, data=FORM_DATA)
     assert response.status_code == HTTPStatus.NOT_FOUND
     comment.refresh_from_db()
     assert comment.text == 'Комментарий'
